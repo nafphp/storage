@@ -1,0 +1,33 @@
+{
+  "name": "naf/storage",
+  "description": "Provider-independent file storage with named disks and streams for NAF.",
+  "type": "naf-plugin",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.3",
+    "ext-fileinfo": "*",
+    "naf/framework": "^0.2",
+    "ext-mbstring": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Naf\\Storage\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "@php vendor/bin/phpunit --colors=always",
+      "@php tests/run.php",
+      "@php tests/host.php"
+    ]
+  },
+  "require-dev": {
+    "nyholm/psr7": "^1.8.2",
+    "phpunit/phpunit": "^11.5 || ^12.1"
+  }
+}
