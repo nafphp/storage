@@ -18,8 +18,8 @@ just like `Naf\Client\client()` and other plugin helpers.
 
 ## Installation and configuration
 
-Requires PHP 8.3+ and `naf/framework ^0.2`. Storage has no additional runtime
-libraries or extension requirements of its own.
+Requires PHP 8.3+ and `naf/framework ^0.2`. Local storage has no additional runtime
+libraries or extension requirements. Remote adapters use optional dependencies described below.
 
 After the first stable release, install using `composer require naf/storage`.
 Until then, contributors can install this checkout in a **disposable development
@@ -185,27 +185,147 @@ Optionally implement `PublicUrlProviderInterface::url(string $path): string` whe
 backend can supply public URLs. A configured prefix takes precedence. An adapter
 must expose that capability only for files that may be public.
 
-A future S3-compatible adapter should be named **`S3Adapter`**, not `AwsAdapter`.
-S3, Dropbox and WebDAV are not implemented here. For HTTP adapters, start with
-**`naf/client`**, its `Naf\Client\Core\Client` and PSR-18 `ClientInterface`; bind that
-interface in the adapter package's bootstrap when needed. Reuse NAF config/DI and
-PSR-3 logging instead of introducing parallel infrastructure.
+The included backends are `LocalAdapter`, `S3Adapter` and `WebDavAdapter`. Remote
+adapters reuse **`naf/client ^0.2.2`** (currently unreleased), its lazy shared service,
+and PSR-18. A registered `ClientInterface` binding is injected by normal NAF DI;
+otherwise the adapters resolve the NAF client themselves. There is no provider
+registry, manual bootstrap or second HTTP transport.
 
-The current NAF client converts request bodies to strings. Before adding large-file
-HTTP uploads, verify its streaming behavior and extend the existing client boundary
-if necessary; do not assume PSR-18 alone guarantees bounded-memory transfers.
+A custom PSR-18 client must support bounded-memory bodies/responses, preserve encoded
+file bytes, and disable automatic redirects and mutation retries. NAF's client is
+configured accordingly on a clone; its shared settings remain unchanged.
 
-Flysystem was evaluated: its [stream API](https://flysystem.thephpleague.com/docs/usage/filesystem-api/)
-and provider adapters could help future backends, but local operations need no extra
-library. Its [local symlink setting](https://flysystem.thephpleague.com/docs/adapter/local/)
-does not reject links on reads, so the stricter confinement policy would still need
-additional work. A future integration belongs behind a NAF adapter; Flysystem types
-must not become application-facing APIs.
+Flysystem was evaluated again for remote storage. The official AWS SDK already supplies
+S3 signing, error parsing, multipart uploads and server-side copies. Adding Flysystem
+would introduce another wrapper without removing those dependencies. WebDAV uses the
+standard HTTP methods through NAF's client and needs no provider library. Provider SDK
+types are kept out of the application-facing storage contract.
 
 HTTP upload validation, MIME rules, quotas and metadata are outside the disk contract.
 The new facade has no `UploadedFileInterface` overload. Applications convert validated
 uploads to stream resources; future PSR-7 convenience support belongs in `Storage`,
 never an adapter.
+
+## S3 and compatible services
+
+After `naf/client 0.2.2` and `naf/storage 0.1.0` are released:
+
+```sh
+composer require naf/storage 'naf/client:^0.2.2' 'aws/aws-sdk-php:^3.395.2'
+```
+
+The SDK is optional for local/WebDAV installations. It brings transitive Guzzle packages,
+but all S3 requests use the NAF HTTP client through an internal SDK handler. There is no
+second active HTTP stack. Configuring S3 without its dependencies fails with a clear exception.
+
+Merge this disk into **`app/config.php`**, keeping credentials in environment variables:
+
+```php
+use Naf\Storage\Adapters\S3Adapter;
+
+return [
+    'storage' => [
+        'default' => 'documents',
+        'disks'   => [
+            'documents' => [
+                'adapter'   => S3Adapter::class,
+                'bucket'    => 'application-documents',
+                'region'    => 'eu-central-1',
+                'accessKey' => (string) getenv('STORAGE_S3_ACCESS_KEY'),
+                'secretKey' => (string) getenv('STORAGE_S3_SECRET_KEY'),
+                'prefix'    => 'documents',
+            ],
+        ],
+    ],
+];
+```
+
+`endpoint` optionally selects an S3-compatible service. Set `pathStyle => true` when
+it requires `/bucket/key` addressing, for example a MinIO installation. Standard AWS S3
+uses its regional endpoint and virtual-host addressing by default. `prefix` is optional
+and must be a relative path without a trailing slash. An optional `sessionToken` supports
+explicit temporary credentials; this version does not discover/refresh IAM roles or use
+an ambient AWS credential chain. Recreate affected disks when temporary credentials rotate.
+Use HTTPS for remote services; HTTP is supported for isolated local endpoints.
+
+The bucket must already exist. Use a private bucket policy and grant the credentials only
+the necessary object read/write/delete and multipart permissions. Missing-object checks
+can return 403 without permission to distinguish absent keys; this is an error, never
+silently interpreted as `false`. A missing bucket's HEAD response may be indistinguishable
+from a missing key, so bucket provisioning/validation belongs to deployment.
+
+Uploads do not set public ACLs or change bucket policy. `url()` requires an explicit `url`
+prefix, for example a deliberately public CDN endpoint. That prefix must include the disk's
+configured key prefix. It does not expose private objects or generate signed download URLs.
+
+S3 uploads use multipart automatically for large files. Copies remain server-side and the
+SDK selects multipart copy when required. A move is **copy then delete**, so it is not
+atomic: a delete failure may leave both copies. Concurrent changes to a source are not
+locked. Failed multipart transfers are aborted where possible; abort failure is reported.
+Configure an incomplete-upload lifecycle rule for interrupted processes that cannot run cleanup.
+
+## WebDAV
+
+After the releases above, install `naf/storage` and `naf/client ^0.2.2`. WebDAV additionally
+requires PHP's **DOM extension** (`ext-dom`), but no AWS SDK or WebDAV-specific library.
+
+```php
+use Naf\Storage\Adapters\WebDavAdapter;
+
+return [
+    'storage' => [
+        'disks' => [
+            'documents' => [
+                'adapter'  => WebDavAdapter::class,
+                'endpoint' => 'https://cloud.example.com/remote.php/dav/files/alice/',
+                'username' => (string) getenv('STORAGE_DAV_USERNAME'),
+                'password' => (string) getenv('STORAGE_DAV_APP_PASSWORD'),
+            ],
+        ],
+    ],
+];
+```
+
+Use the existing authenticated files/collection endpoint, for example a Nextcloud user's
+files endpoint, with HTTPS and an application password. The endpoint collection must exist;
+file parent collections beneath it are created automatically. A dedicated account or restricted
+collection is recommended for confinement. The server must implement RFC 4918 `PROPFIND`
+(Depth 0, `resourcetype`), `MKCOL`, `GET`, `PUT`, `DELETE`, `COPY` and `MOVE`.
+
+Properties are checked before operations that could otherwise act recursively on collections.
+Collections cannot be read, overwritten, copied, moved or deleted through this file API.
+Malformed, oversized or entity-bearing property XML fails closed. Authentication/permission
+errors and partial `207` mutation responses are failures. An endpoint is never a public URL;
+configure a public `url` separately only if the server actually offers public file access.
+
+WebDAV atomicity and overwrite behavior on interrupted network transfers depend on the server.
+The adapter does not implement WebDAV locks; protect the collection against hostile concurrent
+writers that could replace a checked file with a collection between requests.
+
+## Remote streams and temporary space
+
+The application API is identical for all three adapters:
+
+```php
+use function Naf\Storage\storage;
+
+storage('documents')->put('invoices/2026/1234.pdf', $contents);
+$stream = storage('documents')->readStream('invoices/2026/1234.pdf');
+try {
+    storage()->writeStream('backups/1234.pdf', $stream);
+} finally {
+    fclose($stream);
+}
+```
+
+Remote uploads snapshot the remaining input into an automatically deleted temporary file.
+This supports non-seekable streams, detects input failures before writing remotely and allows
+SDK hashing/retries without rewinding caller streams. NAF's HTTP client spools responses to
+temporary disk; the adapter returns a native PHP stream at position zero. Download conversion
+can temporarily require a second file-sized buffer on disk. Memory stays bounded, but provision
+enough temporary disk space and allow the request timeout to cover large transfers. These are
+synchronous transfers: the download is complete before `readStream()` returns. `get()` still
+loads the whole result into memory. No automatic content decompression changes stored bytes.
 
 ## Development
 
@@ -221,3 +341,15 @@ provider independence and real NAF boot/config/DI. Run
 `php tests/host.php /path/to/separate-host/vendor/autoload.php` to check a separate
 Composer installation. CI covers PHP 8.3–8.5; PHPUnit 11 supports PHP 8.3, while
 newer runtimes may resolve PHPUnit 12.
+
+Remote unit tests inject PSR-18 fakes and exercise signed requests, SDK failures, multipart
+abort, WebDAV collections, hostile XML, configuration and stream errors. Run the opt-in
+integration suite with Docker and a checked-out streaming NAF client:
+
+```sh
+sh tests/remotes.sh /absolute/path/to/nafphp/client
+```
+
+It starts disposable MinIO and rclone WebDAV containers bound only to loopback, checks both
+adapters with 32 MiB files and removes containers/data even on failure. It never uses AWS or
+Nextcloud credentials. The test-only client checkout is not a production Composer repository.

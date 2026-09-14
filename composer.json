@@ -24,6 +24,16 @@
     ]
   },
   "require-dev": {
-    "phpunit/phpunit": "^11.5 || ^12.1"
+    "phpunit/phpunit": "^11.5 || ^12.1",
+    "aws/aws-sdk-php": "^3.395.2"
+  },
+  "suggest": {
+    "naf/client": "^0.2.2 for S3 and WebDAV through the native streaming HTTP client.",
+    "aws/aws-sdk-php": "^3.395.2 for S3 storage (signing and multipart operations).",
+    "ext-dom": "Required for WebDAV property responses."
+  },
+  "conflict": {
+    "naf/client": "<0.2.2",
+    "aws/aws-sdk-php": "<3.395.2"
   }
 }

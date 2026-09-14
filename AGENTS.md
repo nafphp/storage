@@ -21,8 +21,7 @@ create one adapter per disk; dependencies use normal NAF DI.
 
 `StorageAdapterInterface` accepts relative paths, contents and PHP streams. Upload
 validation and application authorization/quotas/metadata do not belong in adapters.
-Future public-URL providers can implement `PublicUrlProviderInterface`. Name a future
-S3 adapter `S3Adapter`; prefer `naf/client` and PSR-18 for external APIs. Keep Flysystem,
+Public-URL providers can implement `PublicUrlProviderInterface`. The remote adapters are `S3Adapter` and `WebDavAdapter`; they use `naf/client` and PSR-18 for external APIs. Keep Flysystem,
 if ever used, behind NAF types.
 
 ## Local I/O and verification
@@ -45,3 +44,17 @@ named variables for nested expressions or conditions when they improve readabili
 Align `=` and `=>` within related local groups; do not stretch unrelated statements
 across whole methods. Keep application-facing examples equally readable. Storage is
 only the disk API: do not reintroduce a separate upload-staging/lifecycle service.
+
+## Remote adapters
+
+S3 uses the optional AWS SDK internally through `Support/S3HttpHandler`; do not expose SDK
+objects in disk configuration or build a second signer/multipart implementation. WebDAV uses
+NAF/PSR-18 HTTP methods and DOM property parsing, with no provider dependency. Remote uploads
+snapshot caller input to bounded temporary storage. Preserve explicit private/public separation,
+encoded byte fidelity, no arbitrary redirects, missing-versus-forbidden errors and file-only
+WebDAV operations. Optional dependencies must stay optional for local storage. `naf/client`
+0.2.2 is a prerequisite for the native remote path and must be released first.
+
+Run `sh tests/remotes.sh /path/to/client` for isolated Docker integration tests; the runner
+cleans up its loopback-only test servers and data. CI pins the reviewed client commit until
+that version is published. No test should access a real customer's bucket or WebDAV account.
