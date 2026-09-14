@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Naf\Storage\Filesystem;
+use Naf\Storage\Storage;
 use function Naf\{app, config};
 use function Naf\Storage\storage;
 
@@ -69,7 +69,7 @@ CONFIG);
 
     $contents = storage('documents')->get('foo.txt');
     $url      = storage('public')->url('avatars/123.jpg');
-    $injected = app()->container()->get(Filesystem::class);
+    $injected = app()->container()->get(Storage::class);
 
     check($contents === 'Hello World', 'Host default disk was not selected');
     check($url === '/storage/avatars/123.jpg', 'Public disk URL mismatch');

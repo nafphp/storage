@@ -7,50 +7,50 @@ namespace Tests\Unit;
 use Naf\Storage\Adapters\LocalAdapter;
 use Naf\Storage\Exceptions\StorageException;
 use Naf\Storage\Exceptions\UnableToWriteException;
-use Naf\Storage\Filesystem;
+use Naf\Storage\Storage;
 use Naf\Storage\StorageAdapterInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Fixtures\{FailingStream, PublicAdapter, RecordingAdapter};
 use Tests\NafTestCase;
 
-final class FilesystemTest extends NafTestCase
+final class StorageTest extends NafTestCase
 {
     public function testFacadeWorksWithAnIndependentAdapter(): void
     {
-        $filesystem = new Filesystem(new RecordingAdapter('documents', (object) ['constructed' => 0]));
+        $storage = new Storage(new RecordingAdapter('documents', (object) ['constructed' => 0]));
 
-        $filesystem->put('foo.txt', 'Hello World');
+        $storage->put('foo.txt', 'Hello World');
 
-        $this->assertSame('Hello World', $filesystem->get('foo.txt'));
+        $this->assertSame('Hello World', $storage->get('foo.txt'));
 
-        $filesystem->copy('foo.txt', 'copy.txt');
-        $filesystem->move('copy.txt', 'moved.txt');
+        $storage->copy('foo.txt', 'copy.txt');
+        $storage->move('copy.txt', 'moved.txt');
 
-        $this->assertFalse($filesystem->exists('copy.txt'));
-        $this->assertTrue($filesystem->exists('moved.txt'));
+        $this->assertFalse($storage->exists('copy.txt'));
+        $this->assertTrue($storage->exists('moved.txt'));
 
-        $input = $filesystem->readStream('foo.txt');
+        $input = $storage->readStream('foo.txt');
 
         try {
-            $filesystem->writeStream('stream.txt', $input);
+            $storage->writeStream('stream.txt', $input);
 
-            $this->assertSame('Hello World', $filesystem->get('stream.txt'));
+            $this->assertSame('Hello World', $storage->get('stream.txt'));
             $this->assertTrue(is_resource($input));
         } finally {
             fclose($input);
         }
 
-        $filesystem->delete('foo.txt');
+        $storage->delete('foo.txt');
 
-        $this->assertFalse($filesystem->exists('foo.txt'));
+        $this->assertFalse($storage->exists('foo.txt'));
     }
 
     #[DataProvider('publicUrls')]
     public function testPublicUrlsEncodeEachPathSegment(string $prefix, string $path, string $expected): void
     {
-        $filesystem = new Filesystem(new LocalAdapter($this->directory . '/root'), $prefix);
+        $storage = new Storage(new LocalAdapter($this->directory . '/root'), $prefix);
 
-        $this->assertSame($expected, $filesystem->url($path));
+        $this->assertSame($expected, $storage->url($path));
         $this->assertDirectoryDoesNotExist($this->directory . '/root');
     }
 
@@ -67,20 +67,20 @@ final class FilesystemTest extends NafTestCase
 
     public function testPrivateDiskCannotGenerateUrls(): void
     {
-        $filesystem = new Filesystem(new LocalAdapter($this->directory));
+        $storage = new Storage(new LocalAdapter($this->directory));
 
         $this->expectException(StorageException::class);
 
-        $filesystem->url('private.pdf');
+        $storage->url('private.pdf');
     }
 
     public function testAdapterMayProvidePublicUrlsAndConfiguredPrefixTakesPrecedence(): void
     {
-        $adapter    = new PublicAdapter('bucket', (object) ['constructed' => 0]);
-        $filesystem = new Filesystem($adapter);
-        $customUrl  = new Filesystem($adapter, '/custom');
+        $adapter   = new PublicAdapter('bucket', (object) ['constructed' => 0]);
+        $storage   = new Storage($adapter);
+        $customUrl = new Storage($adapter, '/custom');
 
-        $this->assertSame('https://files.example/bucket/image.png', $filesystem->url('image.png'));
+        $this->assertSame('https://files.example/bucket/image.png', $storage->url('image.png'));
         $this->assertSame('/custom/image.png', $customUrl->url('image.png'));
     }
 
@@ -89,7 +89,7 @@ final class FilesystemTest extends NafTestCase
     {
         $this->expectException(StorageException::class);
 
-        new Filesystem($this->createStub(StorageAdapterInterface::class), $url);
+        new Storage($this->createStub(StorageAdapterInterface::class), $url);
     }
 
     public static function invalidUrls(): array
@@ -110,11 +110,11 @@ final class FilesystemTest extends NafTestCase
             $adapter->expects($this->never())->method($operation);
         }
 
-        $filesystem = new Filesystem($adapter, '/files');
+        $storage = new Storage($adapter, '/files');
 
         $this->expectException(StorageException::class);
 
-        $filesystem->$method(...$arguments);
+        $storage->$method(...$arguments);
     }
 
     public static function unsafeOperations(): array
@@ -137,7 +137,7 @@ final class FilesystemTest extends NafTestCase
         $writeOnly = fopen($this->directory . '/write-only', 'wb');
         $storages  = [
             new LocalAdapter($this->directory . '/root'),
-            new Filesystem(new LocalAdapter($this->directory . '/root')),
+            new Storage(new LocalAdapter($this->directory . '/root')),
         ];
 
         try {
@@ -166,15 +166,15 @@ final class FilesystemTest extends NafTestCase
         $stream = fopen('nafbroken://' . $failure, 'rb');
 
         try {
-            $filesystem = new Filesystem(new LocalAdapter($this->directory));
+            $storage = new Storage(new LocalAdapter($this->directory));
 
-            $filesystem->put('file', 'original');
+            $storage->put('file', 'original');
 
             try {
-                $filesystem->writeStream('file', $stream);
+                $storage->writeStream('file', $stream);
                 $this->fail('Broken stream succeeded');
             } catch (UnableToWriteException) {
-                $this->assertSame('original', $filesystem->get('file'));
+                $this->assertSame('original', $storage->get('file'));
                 $this->assertTrue(is_resource($stream));
                 $this->assertSame(['file'], array_values(array_diff(scandir($this->directory), ['.', '..'])));
             }

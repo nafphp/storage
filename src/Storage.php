@@ -8,7 +8,7 @@ use Naf\Storage\Exceptions\StorageException;
 use Naf\Storage\Support\Path;
 
 /** The application-facing API for one disk; file I/O belongs to its adapter. */
-final class Filesystem
+final class Storage
 {
     public function __construct(
         private readonly StorageAdapterInterface $adapter,

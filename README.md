@@ -67,10 +67,10 @@ Configuring the adapter is enough. Applications call `storage()`; NAF wires the
 internal classes automatically:
 
 - `StorageManager` selects and caches the configured disk.
-- `Filesystem` is the returned disk object with `put()`, `get()`, `url()` and stream methods.
+- `Storage` is the returned disk object with `put()`, `get()`, `url()` and stream methods.
 - `LocalAdapter` performs the actual local file operations.
 
-`Filesystem` holds no second storage backend. It validates paths and delegates file
+`Storage` holds no second storage backend. It validates paths and delegates file
 operations to the selected adapter; the adapter validates and consumes input streams.
 There is no separate upload-staging service in this package.
 
@@ -80,7 +80,7 @@ configuration merge recursively; the application wins. Set an inherited `url` to
 
 ## File operations and streams
 
-| Filesystem method | Result |
+| Storage method | Result |
 | --- | --- |
 | `put(string $path, string $contents): void` | Write or replace a file |
 | `get(string $path): string` | Read all contents into memory |
@@ -165,8 +165,8 @@ adapter. NAF's container may wrap service-factory failures in `ContainerExceptio
 ## DI and future adapters
 
 `StorageManager` is a lazy shared NAF service. `storage()` delegates to
-`disk(?string $name = null): Filesystem`. Each disk gets an adapter cached for the
-manager's lifetime. Inject `Filesystem` for the default disk or `StorageManager`
+`disk(?string $name = null): Storage`. Each disk gets an adapter cached for the
+manager's lifetime. Inject `Storage` for the default disk or `StorageManager`
 for named disks. Register application service overrides before first use.
 
 Adapters implement `Naf\Storage\StorageAdapterInterface`: `write`, `writeStream`,
@@ -204,7 +204,7 @@ must not become application-facing APIs.
 
 HTTP upload validation, MIME rules, quotas and metadata are outside the disk contract.
 The new facade has no `UploadedFileInterface` overload. Applications convert validated
-uploads to stream resources; future PSR-7 convenience support belongs in `Filesystem`,
+uploads to stream resources; future PSR-7 convenience support belongs in `Storage`,
 never an adapter.
 
 ## Development

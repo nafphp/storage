@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use Naf\Core\Config;
-use Naf\Storage\Filesystem;
+use Naf\Storage\Storage;
 use Naf\Storage\StorageManager;
 use function Naf\app;
 
@@ -14,4 +14,4 @@ $container->set(StorageManager::class, static fn() => new StorageManager(
     $container,
 ));
 
-$container->set(Filesystem::class, static fn() => $container->get(StorageManager::class)->disk());
+$container->set(Storage::class, static fn() => $container->get(StorageManager::class)->disk());

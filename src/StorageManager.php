@@ -12,7 +12,7 @@ use Throwable;
 /** Select and lazily create the disks declared in NAF configuration. */
 final class StorageManager
 {
-    /** @var array<string, Filesystem> */
+    /** @var array<string, Storage> */
     private array $disks = [];
 
     public function __construct(
@@ -21,7 +21,7 @@ final class StorageManager
     ) {
     }
 
-    public function disk(?string $name = null): Filesystem
+    public function disk(?string $name = null): Storage
     {
         $config = $this->config->get('storage');
 
@@ -65,12 +65,12 @@ final class StorageManager
         try {
             // A fresh adapter per disk: a shared class binding would mix roots/options.
             // NAF resolves constructor dependencies and the explicit named options.
-            $adapter    = $this->container->make($class, $options);
-            $filesystem = new Filesystem($adapter, $url);
+            $adapter = $this->container->make($class, $options);
+            $storage = new Storage($adapter, $url);
 
-            $this->disks[$name] = $filesystem;
+            $this->disks[$name] = $storage;
 
-            return $filesystem;
+            return $storage;
         } catch (Throwable $exception) {
             throw new StorageException("Cannot configure storage disk '$name'.", 0, $exception);
         }

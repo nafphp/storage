@@ -12,10 +12,10 @@ publish only after Packagist availability is verified.
 ## Native NAF integration
 
 This Composer `naf-plugin` provides `Naf\Storage\storage(?string $name = null)`.
-Start with `src/StorageManager.php`, `src/Filesystem.php`, `src/config.php`,
+Start with `src/StorageManager.php`, `src/Storage.php`, `src/config.php`,
 `src/functions.php` and package-root `bootstrap.php`. NAF discovers these resources
 and merges configuration; do not add manual registration or another container,
-config system or HTTP mechanism. Manager and default Filesystem bindings are lazy.
+config system or HTTP mechanism. Manager and default Storage bindings are lazy.
 The manager uses NAF's `AutoResolvingContainer::make()` with named disk options to
 create one adapter per disk; dependencies use normal NAF DI.
 

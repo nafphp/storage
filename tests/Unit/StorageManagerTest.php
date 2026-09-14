@@ -8,7 +8,7 @@ use Naf\Core\{Config, Container};
 use Naf\Decorators\AutoResolvingContainer;
 use Naf\Storage\Adapters\LocalAdapter;
 use Naf\Storage\Exceptions\StorageException;
-use Naf\Storage\Filesystem;
+use Naf\Storage\Storage;
 use Naf\Storage\StorageManager;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Fixtures\RecordingAdapter;
@@ -117,8 +117,8 @@ final class StorageManagerTest extends NafTestCase
         $consumer  = $container->make(StorageConsumer::class);
 
         $this->assertSame(storage(), storage('local'));
-        $this->assertSame(storage(), $container->get(Filesystem::class));
-        $this->assertSame(storage(), $consumer->filesystem);
+        $this->assertSame(storage(), $container->get(Storage::class));
+        $this->assertSame(storage(), $consumer->storage);
         $this->assertSame($container->get(StorageManager::class), $consumer->manager);
         $this->assertDirectoryDoesNotExist(BASE_PATH . '/storage');
     }
@@ -189,7 +189,7 @@ final class StorageManagerTest extends NafTestCase
 
         $this->container->set(\stdClass::class, (object) ['constructed' => 0]);
 
-        $this->assertInstanceOf(Filesystem::class, $manager->disk());
+        $this->assertInstanceOf(Storage::class, $manager->disk());
     }
 
     public function testBootstrapResolvesConfigurationLazilyAndSupportsServiceOverrides(): void
@@ -197,7 +197,7 @@ final class StorageManagerTest extends NafTestCase
         $container = app()->container();
         $previous  = [];
 
-        foreach ([Config::class, StorageManager::class, Filesystem::class] as $id) {
+        foreach ([Config::class, StorageManager::class, Storage::class] as $id) {
             $previous[$id] = $container->get($id);
         }
 
@@ -258,7 +258,7 @@ final class StorageManagerTest extends NafTestCase
 
 final class StorageConsumer
 {
-    public function __construct(public Filesystem $filesystem, public StorageManager $manager)
+    public function __construct(public Storage $storage, public StorageManager $manager)
     {
     }
 }
