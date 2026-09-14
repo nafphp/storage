@@ -38,7 +38,10 @@ Tests use PHPUnit, temporary paths and the real NAF host in `tests/host.php`.
 The latter also accepts a separate Composer host autoloader as its first argument.
 CI covers PHP 8.3–8.5. Keep runtime code PHP 8.3 compatible.
 
-Older `src/LocalStorage.php` and `tests/run.php` are preserved workspace work,
-independent of the disk API. Preserve its streamed limits, MIME mismatch, traversal
-key, promotion, deletion and orphan-cleanup tests. Its application lifecycle API
-must not leak into the provider-neutral adapter interface.
+## Code style
+
+Use blank lines between validation, preparation, I/O and result handling. Introduce
+named variables for nested expressions or conditions when they improve readability.
+Align `=` and `=>` within related local groups; do not stretch unrelated statements
+across whole methods. Keep application-facing examples equally readable. Storage is
+only the disk API: do not reintroduce a separate upload-staging/lifecycle service.

@@ -7,10 +7,10 @@ use Naf\Storage\Adapters\LocalAdapter;
 return [
     'storage' => [
         'default' => 'local',
-        'disks' => [
+        'disks'   => [
             'local' => [
                 'adapter' => LocalAdapter::class,
-                'root' => BASE_PATH . '/storage',
+                'root'    => BASE_PATH . '/storage',
             ],
         ],
     ],

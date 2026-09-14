@@ -18,9 +18,8 @@ just like `Naf\Client\client()` and other plugin helpers.
 
 ## Installation and configuration
 
-Requires PHP 8.3+ and `naf/framework ^0.2`. The preserved, pre-existing `LocalStorage`
-upload prototype also requires `fileinfo` and `mbstring`. The new disk API adds no
-runtime dependencies beyond the framework.
+Requires PHP 8.3+ and `naf/framework ^0.2`. Storage has no additional runtime
+libraries or extension requirements of its own.
 
 After the first stable release, install using `composer require naf/storage`.
 Until then, contributors can install this checkout in a **disposable development
@@ -45,24 +44,35 @@ use Naf\Storage\Adapters\LocalAdapter;
 return [
     'storage' => [
         'default' => 'local',
-        'disks' => [
+        'disks'   => [
             'local' => [
                 'adapter' => LocalAdapter::class,
-                'root' => BASE_PATH . '/storage',
+                'root'    => BASE_PATH . '/storage',
             ],
             'documents' => [
                 'adapter' => LocalAdapter::class,
-                'root' => BASE_PATH . '/storage/documents',
+                'root'    => BASE_PATH . '/storage/documents',
             ],
             'public' => [
                 'adapter' => LocalAdapter::class,
-                'root' => BASE_PATH . '/storage/public',
-                'url' => '/storage',
+                'root'    => BASE_PATH . '/storage/public',
+                'url'     => '/storage',
             ],
         ],
     ],
 ];
 ```
+
+Configuring the adapter is enough. Applications call `storage()`; NAF wires the
+internal classes automatically:
+
+- `StorageManager` selects and caches the configured disk.
+- `Filesystem` is the returned disk object with `put()`, `get()`, `url()` and stream methods.
+- `LocalAdapter` performs the actual local file operations.
+
+`Filesystem` holds no second storage backend. It validates paths and delegates file
+operations to the selected adapter; the adapter validates and consumes input streams.
+There is no separate upload-staging service in this package.
 
 Read values through NAF, for example `config('storage:default')`. Plugin and application
 configuration merge recursively; the application wins. Set an inherited `url` to
@@ -197,7 +207,7 @@ The new facade has no `UploadedFileInterface` overload. Applications convert val
 uploads to stream resources; future PSR-7 convenience support belongs in `Filesystem`,
 never an adapter.
 
-## Development and the pre-existing prototype
+## Development
 
 ```sh
 composer install
@@ -211,9 +221,3 @@ provider independence and real NAF boot/config/DI. Run
 `php tests/host.php /path/to/separate-host/vendor/autoload.php` to check a separate
 Composer installation. CI covers PHP 8.3–8.5; PHPUnit 11 supports PHP 8.3, while
 newer runtimes may resolve PHPUnit 12.
-
-`src/LocalStorage.php` and `tests/run.php` predate the disk abstraction and are retained
-unchanged to preserve existing workspace work. Its private upload staging API is not
-used by the manager/adapters. Its regression script still runs under `composer test`.
-See [prototype notes](docs/legacy-local-storage.md) for existing callers. New
-provider-independent application code should use the disk API above.

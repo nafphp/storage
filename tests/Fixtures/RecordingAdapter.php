@@ -34,8 +34,10 @@ class RecordingAdapter implements StorageAdapterInterface
     public function readStream(string $path): mixed
     {
         $stream = fopen('php://temp', 'w+b');
+
         fwrite($stream, $this->read($path));
         rewind($stream);
+
         return $stream;
     }
 
@@ -52,6 +54,7 @@ class RecordingAdapter implements StorageAdapterInterface
     public function move(string $source, string $destination): void
     {
         $this->copy($source, $destination);
+
         if ($source !== $destination) {
             $this->delete($source);
         }

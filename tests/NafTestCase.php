@@ -13,6 +13,7 @@ abstract class NafTestCase extends TestCase
     protected function setUp(): void
     {
         $this->directory = sys_get_temp_dir() . '/naf-storage-' . bin2hex(random_bytes(12));
+
         mkdir($this->directory, 0700);
     }
 
@@ -24,6 +25,7 @@ abstract class NafTestCase extends TestCase
     private function removeDirectory(string $directory): void
     {
         chmod($directory, 0700);
+
         foreach (new \FilesystemIterator($directory) as $entry) {
             if ($entry->isDir() && !$entry->isLink()) {
                 $this->removeDirectory($entry->getPathname());
@@ -31,6 +33,7 @@ abstract class NafTestCase extends TestCase
                 unlink($entry->getPathname());
             }
         }
+
         rmdir($directory);
     }
 }

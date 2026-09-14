@@ -5,9 +5,7 @@
   "license": "MIT",
   "require": {
     "php": ">=8.3",
-    "ext-fileinfo": "*",
-    "naf/framework": "^0.2",
-    "ext-mbstring": "*"
+    "naf/framework": "^0.2"
   },
   "autoload": {
     "psr-4": {
@@ -22,12 +20,10 @@
   "scripts": {
     "test": [
       "@php vendor/bin/phpunit --colors=always",
-      "@php tests/run.php",
       "@php tests/host.php"
     ]
   },
   "require-dev": {
-    "nyholm/psr7": "^1.8.2",
     "phpunit/phpunit": "^11.5 || ^12.1"
   }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cc8ce74e69f9546019f6acdd751bf31e",
+    "content-hash": "9de205f2f4eb99781130ca109ada73c9",
     "packages": [
         {
             "name": "naf/framework",
@@ -2119,9 +2119,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=8.3",
-        "ext-fileinfo": "*",
-        "ext-mbstring": "*"
+        "php": ">=8.3"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

@@ -18,21 +18,30 @@ final class FilesystemTest extends NafTestCase
     public function testFacadeWorksWithAnIndependentAdapter(): void
     {
         $filesystem = new Filesystem(new RecordingAdapter('documents', (object) ['constructed' => 0]));
+
         $filesystem->put('foo.txt', 'Hello World');
+
         $this->assertSame('Hello World', $filesystem->get('foo.txt'));
+
         $filesystem->copy('foo.txt', 'copy.txt');
         $filesystem->move('copy.txt', 'moved.txt');
+
         $this->assertFalse($filesystem->exists('copy.txt'));
         $this->assertTrue($filesystem->exists('moved.txt'));
+
         $input = $filesystem->readStream('foo.txt');
+
         try {
             $filesystem->writeStream('stream.txt', $input);
+
             $this->assertSame('Hello World', $filesystem->get('stream.txt'));
             $this->assertTrue(is_resource($input));
         } finally {
             fclose($input);
         }
+
         $filesystem->delete('foo.txt');
+
         $this->assertFalse($filesystem->exists('foo.txt'));
     }
 
@@ -40,6 +49,7 @@ final class FilesystemTest extends NafTestCase
     public function testPublicUrlsEncodeEachPathSegment(string $prefix, string $path, string $expected): void
     {
         $filesystem = new Filesystem(new LocalAdapter($this->directory . '/root'), $prefix);
+
         $this->assertSame($expected, $filesystem->url($path));
         $this->assertDirectoryDoesNotExist($this->directory . '/root');
     }
@@ -58,21 +68,27 @@ final class FilesystemTest extends NafTestCase
     public function testPrivateDiskCannotGenerateUrls(): void
     {
         $filesystem = new Filesystem(new LocalAdapter($this->directory));
+
         $this->expectException(StorageException::class);
+
         $filesystem->url('private.pdf');
     }
 
     public function testAdapterMayProvidePublicUrlsAndConfiguredPrefixTakesPrecedence(): void
     {
-        $adapter = new PublicAdapter('bucket', (object) ['constructed' => 0]);
-        $this->assertSame('https://files.example/bucket/image.png', (new Filesystem($adapter))->url('image.png'));
-        $this->assertSame('/custom/image.png', (new Filesystem($adapter, '/custom'))->url('image.png'));
+        $adapter    = new PublicAdapter('bucket', (object) ['constructed' => 0]);
+        $filesystem = new Filesystem($adapter);
+        $customUrl  = new Filesystem($adapter, '/custom');
+
+        $this->assertSame('https://files.example/bucket/image.png', $filesystem->url('image.png'));
+        $this->assertSame('/custom/image.png', $customUrl->url('image.png'));
     }
 
     #[DataProvider('invalidUrls')]
     public function testInvalidUrlConfiguration(string $url): void
     {
         $this->expectException(StorageException::class);
+
         new Filesystem($this->createStub(StorageAdapterInterface::class), $url);
     }
 
@@ -89,11 +105,15 @@ final class FilesystemTest extends NafTestCase
     public function testFacadeRejectsPathsBeforeInvokingThirdPartyAdapters(string $method, array $arguments): void
     {
         $adapter = $this->createMock(StorageAdapterInterface::class);
+
         foreach (['write', 'writeStream', 'read', 'readStream', 'exists', 'delete', 'move', 'copy'] as $operation) {
             $adapter->expects($this->never())->method($operation);
         }
+
         $filesystem = new Filesystem($adapter, '/files');
+
         $this->expectException(StorageException::class);
+
         $filesystem->$method(...$arguments);
     }
 
@@ -111,11 +131,18 @@ final class FilesystemTest extends NafTestCase
     public function testRejectsInvalidClosedAndWriteOnlyStreams(): void
     {
         $closed = fopen('php://temp', 'w+b');
+
         fclose($closed);
+
         $writeOnly = fopen($this->directory . '/write-only', 'wb');
+        $storages  = [
+            new LocalAdapter($this->directory . '/root'),
+            new Filesystem(new LocalAdapter($this->directory . '/root')),
+        ];
+
         try {
             foreach ([null, 'string', new \stdClass(), $closed, $writeOnly] as $stream) {
-                foreach ([new LocalAdapter($this->directory . '/root'), new Filesystem(new LocalAdapter($this->directory . '/root'))] as $storage) {
+                foreach ($storages as $storage) {
                     try {
                         $storage->writeStream('file', $stream);
                         $this->fail('Invalid stream accepted');
@@ -127,6 +154,7 @@ final class FilesystemTest extends NafTestCase
         } finally {
             fclose($writeOnly);
         }
+
         $this->assertDirectoryDoesNotExist($this->directory . '/root');
     }
 
@@ -134,10 +162,14 @@ final class FilesystemTest extends NafTestCase
     public function testFailedStreamsLeaveExistingFilesIntactAndCleanTemporaryFiles(string $failure): void
     {
         stream_wrapper_register('nafbroken', FailingStream::class);
+
         $stream = fopen('nafbroken://' . $failure, 'rb');
+
         try {
             $filesystem = new Filesystem(new LocalAdapter($this->directory));
+
             $filesystem->put('file', 'original');
+
             try {
                 $filesystem->writeStream('file', $stream);
                 $this->fail('Broken stream succeeded');

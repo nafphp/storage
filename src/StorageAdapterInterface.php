@@ -17,6 +17,7 @@ interface StorageAdapterInterface
 
     /**
      * Consume a readable stream from its current position; never close or rewind it.
+     * Reject invalid, closed or unreadable streams with Exceptions\UnableToWriteException.
      *
      * @param resource $stream Readable PHP stream, including non-seekable streams.
      */
