@@ -44,7 +44,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           repository: nafphp/client
-          ref: b5c474aa0baee14cd1b1b4378733a132fe4d7d55
+          ref: e30b3462a8b4cb8a6d647f2b5516a9f060d54d13
           path: .test-client
       - uses: shivammathur/setup-php@v2
         with:
