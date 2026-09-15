@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 // Explicit opt-in integration harness. Only use disposable, loopback endpoints.
 define('BASE_PATH', __DIR__ . '/Fixtures');
-$autoload = getenv('NAF_TEST_AUTOLOAD') ?: dirname(__DIR__) . '/vendor/autoload.php';
-$loader   = require $autoload;
+$autoload   = getenv('NAF_TEST_AUTOLOAD') ?: dirname(__DIR__) . '/vendor/autoload.php';
+$loader     = require $autoload;
 $clientPath = $argv[1] ?? dirname(__DIR__, 2) . '/client';
 $loader->addPsr4('Naf\\Client\\', $clientPath . '/src/');
 
@@ -39,9 +39,9 @@ $user     = 'naf-storage-test';
 $password = 'naf-storage-test-password';
 $bucket   = 'naf-test-' . bin2hex(random_bytes(8));
 $sdk      = new S3Client([
-    'version' => '2006-03-01', 'region' => 'us-east-1', 'endpoint' => $s3Endpoint,
+    'version'                 => '2006-03-01', 'region' => 'us-east-1', 'endpoint' => $s3Endpoint,
     'use_path_style_endpoint' => true, 'credentials' => ['key' => $user, 'secret' => $password],
-    'http_handler' => new S3HttpHandler($http),
+    'http_handler'            => new S3HttpHandler($http),
 ]);
 
 $sdk->createBucket(['Bucket' => $bucket]);
@@ -103,6 +103,7 @@ try {
             [$writer, $reader] = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
             fwrite($writer, 'socket');
             fclose($writer);
+
             try {
                 $storage->writeStream($prefix . '/socket', $reader);
                 check($storage->get($prefix . '/socket') === 'socket', "$name non-seekable upload");
@@ -118,6 +119,7 @@ try {
             }
 
             $storage->delete($first);
+
             try {
                 $storage->get($first);
                 throw new RuntimeException("$name returned a missing file");

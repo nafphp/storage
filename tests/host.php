@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Naf\Storage\Storage;
-use function Naf\{app, config};
+
+use function Naf\app;
+use function Naf\config;
 use function Naf\Storage\storage;
 
 // Optional first argument: a separately installed host's Composer autoloader.
@@ -35,27 +37,27 @@ function removeHost(string $path): void
 
 try {
     file_put_contents($host . '/app/config.php', <<<'CONFIG'
-<?php
+    <?php
 
-use Naf\Storage\Adapters\LocalAdapter;
+    use Naf\Storage\Adapters\LocalAdapter;
 
-return [
-    'storage' => [
-        'default' => 'documents',
-        'disks'   => [
-            'documents' => [
-                'adapter' => LocalAdapter::class,
-                'root'    => BASE_PATH . '/documents',
-            ],
-            'public' => [
-                'adapter' => LocalAdapter::class,
-                'root'    => BASE_PATH . '/public-files',
-                'url'     => '/storage',
+    return [
+        'storage' => [
+            'default' => 'documents',
+            'disks'   => [
+                'documents' => [
+                    'adapter' => LocalAdapter::class,
+                    'root'    => BASE_PATH . '/documents',
+                ],
+                'public' => [
+                    'adapter' => LocalAdapter::class,
+                    'root'    => BASE_PATH . '/public-files',
+                    'url'     => '/storage',
+                ],
             ],
         ],
-    ],
-];
-CONFIG);
+    ];
+    CONFIG);
 
     require $autoload;
 

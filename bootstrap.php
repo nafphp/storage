@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Naf\Core\Config;
 use Naf\Storage\Storage;
 use Naf\Storage\StorageManager;
+
 use function Naf\app;
 
 $container = app()->container();

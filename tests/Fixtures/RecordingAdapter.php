@@ -6,12 +6,13 @@ namespace Tests\Fixtures;
 
 use Naf\Storage\Exceptions\FileNotFoundException;
 use Naf\Storage\StorageAdapterInterface;
+use stdClass;
 
 class RecordingAdapter implements StorageAdapterInterface
 {
     private array $files = [];
 
-    public function __construct(public string $bucket, public \stdClass $dependency)
+    public function __construct(public string $bucket, public stdClass $dependency)
     {
         $dependency->constructed++;
     }

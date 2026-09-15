@@ -353,3 +353,10 @@ sh tests/remotes.sh /absolute/path/to/nafphp/client
 It starts disposable MinIO and rclone WebDAV containers bound only to loopback, checks both
 adapters with 32 MiB files and removes containers/data even on failure. It never uses AWS or
 Nextcloud credentials. The test-only client checkout is not a production Composer repository.
+
+## PHP code style
+
+Source, tests and PHP templates follow the shared [NAF code style](https://github.com/nafphp/docs/blob/main/CODE_STYLE.md)
+(PER Coding Style 3.0 with the Nafinity readability rules). After `composer install`, run
+`composer style:check` to verify formatting or `composer style:fix` to apply it. The formatter
+is a development dependency. Review template output and run the package checks after changes.

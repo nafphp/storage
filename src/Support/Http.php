@@ -8,6 +8,7 @@ use Naf\Client\Core\Client;
 use Naf\Client\Transports\StreamingTransportInterface;
 use Naf\Storage\Exceptions\StorageException;
 use Psr\Http\Client\ClientInterface;
+
 use function Naf\Client\client;
 
 /** @internal Reuse NAF's HTTP service; no storage-specific transport or retry loop. */

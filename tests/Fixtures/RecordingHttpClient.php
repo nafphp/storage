@@ -13,7 +13,7 @@ final class RecordingHttpClient implements ClientInterface
 {
     /** @var list<RequestInterface> */
     public array $requests = [];
-    public array $bodies = [];
+    public array $bodies   = [];
 
     public function __construct(public Closure $handler)
     {

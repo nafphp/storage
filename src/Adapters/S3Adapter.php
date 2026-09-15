@@ -47,14 +47,14 @@ final class S3Adapter implements StorageAdapterInterface
         }
 
         $options = [
-            'version'                       => '2006-03-01',
-            'region'                        => $region,
-            'use_path_style_endpoint'       => $pathStyle,
-            'credentials'                   => ['key' => $accessKey, 'secret' => $secretKey, 'token' => $sessionToken],
-            'http_handler'                  => new S3HttpHandler(Http::client($client)),
-            'retries'                       => 2,
-            'request_checksum_calculation'  => 'when_required',
-            'response_checksum_validation'  => 'when_required',
+            'version'                      => '2006-03-01',
+            'region'                       => $region,
+            'use_path_style_endpoint'      => $pathStyle,
+            'credentials'                  => ['key' => $accessKey, 'secret' => $secretKey, 'token' => $sessionToken],
+            'http_handler'                 => new S3HttpHandler(Http::client($client)),
+            'retries'                      => 2,
+            'request_checksum_calculation' => 'when_required',
+            'response_checksum_validation' => 'when_required',
         ];
 
         if ($endpoint !== null) {

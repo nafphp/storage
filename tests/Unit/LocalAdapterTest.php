@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
+use ErrorException;
+use LogicException;
 use Naf\Storage\Adapters\LocalAdapter;
 use Naf\Storage\Exceptions\FileNotFoundException;
 use Naf\Storage\Exceptions\StorageException;
@@ -47,6 +49,7 @@ final class LocalAdapterTest extends NafTestCase
     public function testStreamsUseCurrentPositionAndRemainOwnedByCaller(): void
     {
         $input = fopen('php://temp', 'w+b');
+
         try {
             fwrite($input, 'skip:streamed contents');
             fseek($input, 5);
@@ -54,6 +57,7 @@ final class LocalAdapterTest extends NafTestCase
             $this->assertTrue(is_resource($input));
             $this->assertTrue(feof($input));
             $output = $this->adapter->readStream('nested/file');
+
             try {
                 $this->assertSame(0, ftell($output));
                 $this->assertSame('streamed contents', stream_get_contents($output));
@@ -69,8 +73,9 @@ final class LocalAdapterTest extends NafTestCase
 
     public function testNonSeekableStreams(): void
     {
-        $pair = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
+        $pair             = stream_socket_pair(STREAM_PF_UNIX, STREAM_SOCK_STREAM, STREAM_IPPROTO_IP);
         [$input, $output] = $pair;
+
         try {
             fwrite($output, 'non-seekable');
             stream_socket_shutdown($output, STREAM_SHUT_WR);
@@ -86,6 +91,7 @@ final class LocalAdapterTest extends NafTestCase
     public function testLargeStreamsAndCopyDoNotBufferTheWholeFile(): void
     {
         $input = fopen($this->directory . '/large', 'w+b');
+
         try {
             $chunk = str_repeat('abcdefgh', 8192);
             for ($i = 0; $i < 512; $i++) {
@@ -169,6 +175,7 @@ final class LocalAdapterTest extends NafTestCase
             }
         }
         $input = fopen('php://temp', 'r+');
+
         try {
             $this->expectException(StorageException::class);
             $this->adapter->writeStream($path, $input);
@@ -179,7 +186,7 @@ final class LocalAdapterTest extends NafTestCase
 
     public static function invalidPaths(): array
     {
-        return array_map(static fn ($path) => [$path], [
+        return array_map(static fn($path) => [$path], [
             '', '../foo', '/foo', '//server/share', 'foo/../../etc/passwd', './foo', 'foo/./bar',
             'C:/Windows/win.ini', 'C:\\Windows\\win.ini', 'C:relative', '\\rooted', '\\\\server\\share',
             'php://filter/resource=file', 'https://example.com/file', 'data:text/plain,hello',
@@ -235,6 +242,7 @@ final class LocalAdapterTest extends NafTestCase
         $this->adapter->write('source', 'inside');
         file_put_contents($this->directory . '/outside', 'outside');
         symlink($this->directory . '/outside', $this->directory . '/root/link');
+
         try {
             $this->adapter->$operation('source', 'link');
             $this->fail('Followed destination symlink');
@@ -271,15 +279,16 @@ final class LocalAdapterTest extends NafTestCase
             $this->markTestSkipped('Permission checks require an unprivileged user.');
         }
         $handler = static function (): never {
-            throw new \LogicException('Warning escaped storage');
+            throw new LogicException('Warning escaped storage');
         };
         set_error_handler($handler);
+
         try {
             try {
                 $this->adapter->write('file', 'replacement');
                 $this->fail('Write to read-only directory succeeded');
             } catch (UnableToWriteException $exception) {
-                $this->assertInstanceOf(\ErrorException::class, $exception->getPrevious());
+                $this->assertInstanceOf(ErrorException::class, $exception->getPrevious());
             }
             $current = set_error_handler($handler);
             restore_error_handler();
@@ -333,6 +342,7 @@ final class LocalAdapterTest extends NafTestCase
         if (is_writable($this->directory . '/root') && is_readable($this->directory . '/root/source')) {
             $this->markTestSkipped('Permission checks require an unprivileged user.');
         }
+
         try {
             $this->expectException(StorageException::class);
             $this->adapter->$operation('source', 'destination');
@@ -385,6 +395,7 @@ final class LocalAdapterTest extends NafTestCase
         if (is_readable($this->directory . '/root/private')) {
             $this->markTestSkipped('Permission checks require an unprivileged user.');
         }
+
         try {
             $this->expectException(StorageException::class);
             $this->adapter->exists('private/file');

@@ -10,7 +10,10 @@ use Naf\Storage\Exceptions\UnableToWriteException;
 use Naf\Storage\Storage;
 use Naf\Storage\StorageAdapterInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
-use Tests\Fixtures\{FailingStream, PublicAdapter, RecordingAdapter};
+use stdClass;
+use Tests\Fixtures\FailingStream;
+use Tests\Fixtures\PublicAdapter;
+use Tests\Fixtures\RecordingAdapter;
 use Tests\NafTestCase;
 
 final class StorageTest extends NafTestCase
@@ -94,7 +97,7 @@ final class StorageTest extends NafTestCase
 
     public static function invalidUrls(): array
     {
-        return array_map(static fn ($url) => [$url], [
+        return array_map(static fn($url) => [$url], [
             '', 'relative/path', 'javascript:alert(1)', 'file:///tmp', '//host/path',
             'https://user:pass@host', 'https://host/path?x=y', '/path#fragment',
             "https://host/\nheader", 'https://host/space here', '/\\evil',
@@ -141,7 +144,7 @@ final class StorageTest extends NafTestCase
         ];
 
         try {
-            foreach ([null, 'string', new \stdClass(), $closed, $writeOnly] as $stream) {
+            foreach ([null, 'string', new stdClass(), $closed, $writeOnly] as $stream) {
                 foreach ($storages as $storage) {
                     try {
                         $storage->writeStream('file', $stream);

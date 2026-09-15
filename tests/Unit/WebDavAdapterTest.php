@@ -60,9 +60,9 @@ final class WebDavAdapterTest extends NafTestCase
     public function testReadExistsOverwriteCopyMoveAndDelete(): void
     {
         $http = new RecordingHttpClient(static fn($request) => match ($request->getMethod()) {
-            'PROPFIND' => self::properties($request->getUri()->getPath()),
-            'GET'      => new Response(200, [], 'hello'),
-            'PUT'      => new Response(204),
+            'PROPFIND'               => self::properties($request->getUri()->getPath()),
+            'GET'                    => new Response(200, [], 'hello'),
+            'PUT'                    => new Response(204),
             'COPY', 'MOVE', 'DELETE' => new Response(204),
         });
         $adapter = $this->adapter($http);

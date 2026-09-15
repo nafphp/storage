@@ -50,7 +50,7 @@ final class StorageManager
 
         if (!is_string($class) || !is_subclass_of($class, StorageAdapterInterface::class)) {
             throw new StorageException(
-                "Storage disk '$name' must name an adapter implementing " . StorageAdapterInterface::class . '.'
+                "Storage disk '$name' must name an adapter implementing " . StorageAdapterInterface::class . '.',
             );
         }
 

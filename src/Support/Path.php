@@ -13,7 +13,7 @@ final class Path
     {
         if ($path === '' || preg_match('/[\x00-\x1f\x7f\\\\:]/', $path)) {
             throw new StorageException(
-                'Storage paths must be relative file paths without control characters, backslashes or schemes.'
+                'Storage paths must be relative file paths without control characters, backslashes or schemes.',
             );
         }
 

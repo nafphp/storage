@@ -18,7 +18,7 @@ final class LocalAdapter implements StorageAdapterInterface
 
     public function __construct(
         string $root,
-        private readonly int $fileMode      = 0600,
+        private readonly int $fileMode = 0600,
         private readonly int $directoryMode = 0700,
     ) {
         $isUnixRoot    = str_starts_with($root, '/');
@@ -121,7 +121,7 @@ final class LocalAdapter implements StorageAdapterInterface
     {
         Path::validate($path);
 
-        return $this->perform(fn () => is_file($this->resolve($path)), "Unable to check '$path'.");
+        return $this->perform(fn() => is_file($this->resolve($path)), "Unable to check '$path'.");
     }
 
     public function delete(string $path): void
@@ -352,8 +352,7 @@ final class LocalAdapter implements StorageAdapterInterface
         callable $operation,
         string $message,
         string $exceptionClass = StorageException::class,
-    ): mixed
-    {
+    ): mixed {
         set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
             if (!(error_reporting() & $severity)) {
                 return true;

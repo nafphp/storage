@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Tests\Unit;
 
-use Naf\Core\{Config, Container};
+use Naf\Core\Config;
+use Naf\Core\Container;
 use Naf\Decorators\AutoResolvingContainer;
 use Naf\Storage\Adapters\LocalAdapter;
 use Naf\Storage\Exceptions\StorageException;
 use Naf\Storage\Storage;
 use Naf\Storage\StorageManager;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
+use stdClass;
 use Tests\Fixtures\RecordingAdapter;
 use Tests\NafTestCase;
 
-use function Naf\{app, config};
+use function Naf\app;
+use function Naf\config;
 use function Naf\Storage\storage;
 
 final class StorageManagerTest extends NafTestCase
@@ -64,7 +68,7 @@ final class StorageManagerTest extends NafTestCase
     {
         $dependency = (object) ['constructed' => 0];
 
-        $this->container->set(\stdClass::class, $dependency);
+        $this->container->set(stdClass::class, $dependency);
 
         $config = new Config([
             'storage' => [
@@ -135,7 +139,7 @@ final class StorageManagerTest extends NafTestCase
 
     public static function invalidConfigurations(): array
     {
-        $disk = static fn (array $options): array => ['disks' => ['local' => $options]];
+        $disk = static fn(array $options): array => ['disks' => ['local' => $options]];
 
         return [
             [null, null],
@@ -150,8 +154,8 @@ final class StorageManagerTest extends NafTestCase
             [['disks' => ['local' => false]], 'local'],
             [$disk([]), 'local'],
             [$disk(['adapter' => 'Missing']), 'local'],
-            [$disk(['adapter' => new \stdClass()]), 'local'],
-            [$disk(['adapter' => \stdClass::class]), 'local'],
+            [$disk(['adapter' => new stdClass()]), 'local'],
+            [$disk(['adapter' => stdClass::class]), 'local'],
             [$disk(['adapter' => LocalAdapter::class]), 'local'],
             [$disk(['adapter' => LocalAdapter::class, 'root' => []]), 'local'],
             [$disk(['adapter' => LocalAdapter::class, 'root' => 'relative']), 'local'],
@@ -177,7 +181,7 @@ final class StorageManagerTest extends NafTestCase
 
         $manager = new StorageManager($config, $this->container);
 
-        $this->container->set(\stdClass::class, static fn () => throw new \RuntimeException('Dependency unavailable'));
+        $this->container->set(stdClass::class, static fn() => throw new RuntimeException('Dependency unavailable'));
 
         try {
             $manager->disk();
@@ -187,7 +191,7 @@ final class StorageManagerTest extends NafTestCase
             $this->assertStringContainsString('custom', $exception->getMessage());
         }
 
-        $this->container->set(\stdClass::class, (object) ['constructed' => 0]);
+        $this->container->set(stdClass::class, (object) ['constructed' => 0]);
 
         $this->assertInstanceOf(Storage::class, $manager->disk());
     }

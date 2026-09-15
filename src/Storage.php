@@ -38,7 +38,7 @@ final class Storage
         ) {
             throw new StorageException(
                 'A public storage URL must be a root-relative path or an HTTP(S) URL '
-                . 'without credentials, query or fragment.'
+                . 'without credentials, query or fragment.',
             );
         }
     }

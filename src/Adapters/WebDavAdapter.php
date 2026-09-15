@@ -171,7 +171,7 @@ final class WebDavAdapter implements StorageAdapterInterface
 
         foreach ($segments as $segment) {
             $parent .= '/' . rawurlencode($segment);
-            $type    = $this->type($parent . '/');
+            $type = $this->type($parent . '/');
 
             if ($type === 'collection') {
                 continue;
@@ -278,15 +278,15 @@ final class WebDavAdapter implements StorageAdapterInterface
                 throw new StorageException('WebDAV returned an unexpected number of resources.');
             }
 
-            $href      = $xpath->evaluate('string(d:href)', $responses->item(0));
-            $hrefPath  = parse_url($href, PHP_URL_PATH);
+            $href     = $xpath->evaluate('string(d:href)', $responses->item(0));
+            $hrefPath = parse_url($href, PHP_URL_PATH);
 
             if (!is_string($hrefPath)) {
                 throw new StorageException('WebDAV returned an invalid resource URL.');
             }
 
-            $hrefPath  = rawurldecode($hrefPath);
-            $urlPath   = rawurldecode(parse_url($url, PHP_URL_PATH) ?? '');
+            $hrefPath = rawurldecode($hrefPath);
+            $urlPath  = rawurldecode(parse_url($url, PHP_URL_PATH) ?? '');
 
             if (rtrim($hrefPath, '/') !== rtrim($urlPath, '/')) {
                 throw new StorageException('WebDAV returned properties for an unexpected resource.');

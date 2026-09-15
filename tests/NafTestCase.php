@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use FilesystemIterator;
 use PHPUnit\Framework\TestCase;
 
 abstract class NafTestCase extends TestCase
@@ -26,7 +27,7 @@ abstract class NafTestCase extends TestCase
     {
         chmod($directory, 0700);
 
-        foreach (new \FilesystemIterator($directory) as $entry) {
+        foreach (new FilesystemIterator($directory) as $entry) {
             if ($entry->isDir() && !$entry->isLink()) {
                 $this->removeDirectory($entry->getPathname());
             } else {
