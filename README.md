@@ -186,7 +186,7 @@ backend can supply public URLs. A configured prefix takes precedence. An adapter
 must expose that capability only for files that may be public.
 
 The included backends are `LocalAdapter`, `S3Adapter` and `WebDavAdapter`. Remote
-adapters reuse **`naf/client ^0.2.2`** (currently unreleased), its lazy shared service,
+adapters reuse **`naf/client ^0.2.2`**, its lazy shared service,
 and PSR-18. A registered `ClientInterface` binding is injected by normal NAF DI;
 otherwise the adapters resolve the NAF client themselves. There is no provider
 registry, manual bootstrap or second HTTP transport.
