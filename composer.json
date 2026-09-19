@@ -1,0 +1,47 @@
+{
+  "name": "naf/storage",
+  "description": "Provider-independent file storage with named disks and streams for NAF.",
+  "type": "naf-plugin",
+  "license": "MIT",
+  "require": {
+    "php": ">=8.3",
+    "naf/framework": "^0.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "Naf\\Storage\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": [
+      "@php vendor/bin/phpunit --colors=always",
+      "@php tests/host.php"
+    ],
+    "style:check": "@php vendor/bin/php-cs-fixer fix --dry-run --diff",
+    "style:fix": "@php vendor/bin/php-cs-fixer fix"
+  },
+  "require-dev": {
+    "aws/aws-sdk-php": "^3.395.2",
+    "friendsofphp/php-cs-fixer": "3.95.25",
+    "phpunit/phpunit": "^11.5 || ^12.1"
+  },
+  "suggest": {
+    "naf/client": "^0.2.2 for S3 and WebDAV through the native streaming HTTP client.",
+    "aws/aws-sdk-php": "^3.395.2 for S3 storage (signing and multipart operations).",
+    "ext-dom": "Required for WebDAV property responses."
+  },
+  "conflict": {
+    "naf/client": "<0.2.2",
+    "aws/aws-sdk-php": "<3.395.2"
+  },
+  "config": {
+    "platform": {
+      "php": "8.3.0"
+    }
+  }
+}

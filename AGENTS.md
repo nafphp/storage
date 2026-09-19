@@ -1,0 +1,64 @@
+# Working on naf/storage
+
+Read [composer.json](composer.json), [README.md](README.md), the
+[shared workflow](https://github.com/nafphp/docs/blob/main/AGENT_WORKFLOW.md) and
+[release procedure](https://github.com/nafphp/docs/blob/main/RELEASING.md).
+In the multi-repository workspace, the shared documents are in sibling `docs/`.
+Preserve other contributors' uncommitted work. Package changes use an RC branch,
+are tested, committed and pushed, and are merged by the maintainer. A fix request
+does not authorize a release. Prepare version-dependent docs before release and
+publish only after Packagist availability is verified.
+
+## Native NAF integration
+
+This Composer `naf-plugin` provides `Naf\Storage\storage(?string $name = null)`.
+Start with `src/StorageManager.php`, `src/Storage.php`, `src/config.php`,
+`src/functions.php` and package-root `bootstrap.php`. NAF discovers these resources
+and merges configuration; do not add manual registration or another container,
+config system or HTTP mechanism. Manager and default Storage bindings are lazy.
+The manager uses NAF's `AutoResolvingContainer::make()` with named disk options to
+create one adapter per disk; dependencies use normal NAF DI.
+
+`StorageAdapterInterface` accepts relative paths, contents and PHP streams. Upload
+validation and application authorization/quotas/metadata do not belong in adapters.
+Public-URL providers can implement `PublicUrlProviderInterface`. The remote adapters are `S3Adapter` and `WebDavAdapter`; they use `naf/client` and PSR-18 for external APIs. Keep Flysystem,
+if ever used, behind NAF types.
+
+## Local I/O and verification
+
+The local adapter must be safe without a booted NAF app. Preserve traversal,
+absolute-path and symlink rejection, regular-file checks, lazy directory creation,
+private default permissions and exception translation. Writes/copies use bounded
+buffers and temporary files before replacement. Caller streams stay open and are
+consumed from their current position. URLs must not silently publish files.
+
+Run `composer test` and `composer validate --strict`; no `analyse` script is declared.
+Tests use PHPUnit, temporary paths and the real NAF host in `tests/host.php`.
+The latter also accepts a separate Composer host autoloader as its first argument.
+CI covers PHP 8.3–8.5. Keep runtime code PHP 8.3 compatible.
+
+## Code style
+
+Use blank lines between validation, preparation, I/O and result handling. Introduce
+named variables for nested expressions or conditions when they improve readability.
+Align `=` and `=>` within related local groups; do not stretch unrelated statements
+across whole methods. Keep application-facing examples equally readable. Storage is
+only the disk API: do not reintroduce a separate upload-staging/lifecycle service.
+
+## Remote adapters
+
+S3 uses the optional AWS SDK internally through `Support/S3HttpHandler`; do not expose SDK
+objects in disk configuration or build a second signer/multipart implementation. WebDAV uses
+NAF/PSR-18 HTTP methods and DOM property parsing, with no provider dependency. Remote uploads
+snapshot caller input to bounded temporary storage. Preserve explicit private/public separation,
+encoded byte fidelity, no arbitrary redirects, missing-versus-forbidden errors and file-only
+WebDAV operations. Optional dependencies must stay optional for local storage. `naf/client`
+0.2.2 is a prerequisite for the native remote path and must be released first.
+
+Run `sh tests/remotes.sh /path/to/client` for isolated Docker integration tests; the runner
+cleans up its loopback-only test servers and data. CI pins the reviewed client commit until
+that version is published. No test should access a real customer's bucket or WebDAV account.
+
+Follow the shared [PHP code style](https://github.com/nafphp/docs/blob/main/CODE_STYLE.md)
+and `.php-cs-fixer.dist.php`. Run `composer style:check`; `composer style:fix` applies the rules.
+Keep logical steps and local names readable, preserving public signatures and template output.
