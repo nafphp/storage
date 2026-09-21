@@ -59,6 +59,8 @@ Run `sh tests/remotes.sh /path/to/client` for isolated Docker integration tests;
 cleans up its loopback-only test servers and data. CI pins the reviewed client commit until
 that version is published. No test should access a real customer's bucket or WebDAV account.
 
+User docs: [File storage](https://nafphp.github.io/docs/file-storage/).
+
 Follow the shared [PHP code style](https://github.com/nafphp/docs/blob/main/CODE_STYLE.md)
 and `.php-cs-fixer.dist.php`. Run `composer style:check`; `composer style:fix` applies the rules.
 Keep logical steps and local names readable, preserving public signatures and template output.
